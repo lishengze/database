@@ -4,7 +4,9 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    testConnect ();
+//    testAdo ();
 //    testFunc ();
+//    outputDatabaseDrivers();
+    testODBC ();
     return a.exec();
 }

@@ -3,10 +3,13 @@
 #include <string>
 using std::string;
 
-void testConnect();
+void testAdo();
 
 string getConnectStr(string userid, string pwd, string databaseName);
 
-void testFunc();
+void testGetConnectStr();
 
+void outputDatabaseDrivers();
+
+void testODBC();
 #endif

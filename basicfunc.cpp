@@ -1,5 +1,8 @@
 #include <iostream>
 #include <iomanip>
+#include <QSqlDatabase>
+#include <QStringList>
+#include <QSqlQuery>
 #include "windows.h"
 #include <qDebug>
 using namespace std;
@@ -13,29 +16,25 @@ string getConnectStr(string userid, string pwd, string databaseName){
 	return str;
 }
 
-void testConnect() {
-	::CoInitialize(NULL);
+void testAdo() {
+    ::CoInitialize(NULL); // 初始化COM组件;
 
 	//类型在msado15.dll中已定义
+    _ConnectionPtr m_pConnection("ADODB.Connection");
 	_RecordsetPtr m_pRecordset("ADODB.Recordset");
-	_ConnectionPtr m_pConnection("ADODB.Connection");
-	//string originDataTable = "[dbo].[AExchangeData]";
-	//string queryString = string("select * from ") + originDataTable;
-    string tableName = "SH600000";
-    string sqlStr = "select * from [dbo].[" + tableName +"]";
-	_bstr_t bstrSQL(sqlStr.c_str()); //对应的sql语句
 
 	try
 	{
         cout << "正在连接数据库..." << endl;
 		m_pConnection.CreateInstance("ADODB.Connection");//创建Connection对象
+
 		//设置连接字符串，必须是BSTR型或者_bstr_t类型
         string userid = "sa";
         string pwd = "sasa";
         string databaseName = "MarketDataTest";
-        _bstr_t strConnect = getConnectStr(userid, pwd, databaseName).c_str ();
+        _bstr_t sqlstr_connDatabase = getConnectStr(userid, pwd, databaseName).c_str ();
 
-		m_pConnection->Open(strConnect, "", "", adModeUnknown);//服务器连接
+        m_pConnection->Open(sqlstr_connDatabase, "", "", adModeUnknown);//服务器连接
 
 		if (m_pConnection == NULL)
 		{
@@ -44,8 +43,11 @@ void testConnect() {
 
 		m_pRecordset.CreateInstance(__uuidof(Recordset));//创建记录集对象
 
-		//取得表中的记录
-		m_pRecordset->Open(bstrSQL, m_pConnection.GetInterfacePtr(), adOpenDynamic, adLockOptimistic, adCmdText);
+        //取得表中的记录, 设置对应的sql语句
+        string tableName = "SH600000";
+        string sqlStr = "select * from [dbo].[" + tableName +"]";
+        _bstr_t sqlstr_getData(sqlStr.c_str());
+        m_pRecordset->Open(sqlstr_getData, m_pConnection.GetInterfacePtr(), adOpenDynamic, adLockOptimistic, adCmdText);
 
         _variant_t secode;//对应库中的字段
         string colname = "SECODE";
@@ -75,9 +77,49 @@ void testConnect() {
 	::CoUninitialize();
 }
 
-void testFunc(){
+void testGetConnectStr(){
 	string userid = "sa";
 	string pwd = "sasa";
 	string databaseName = "MarketDataTest";
     cout << getConnectStr(userid, pwd, databaseName)<< endl;
+}
+
+void outputDatabaseDrivers() {
+    qDebug() << "Available drivers: ";
+    QStringList driversList = QSqlDatabase::drivers();
+    foreach (QString driver, driversList) {
+        qDebug() << driver;
+    }
+}
+
+QSqlDatabase createODBCConn() {
+    QSqlDatabase db = QSqlDatabase::addDatabase ("QODBC");
+    QString databaseName = QString::fromLocal8Bit ("SqlServer");
+    db.setHostName("localhost");
+    db.setDatabaseName (databaseName);
+    db.setUserName ("sa");
+    db.setPassword ("sasa");
+
+    if (!db.open ()) {
+        qDebug() << "Open database: " + databaseName  + " failed!";
+        qDebug() << db.lastError ();
+    } else {
+        qDebug() << "Open database: " + databaseName  + " successfully!";
+    }
+    return db;
+}
+
+/*
+测试qt ODBC连接数据库;
+*/
+void testODBC() {
+
+    QSqlDatabase db = createODBCConn();
+
+    QSqlQuery queryObj(db);
+    QString sqlstr = "select top 10[stockcode] from [WeightData].[dbo].[SH000300]";
+    queryObj.exec(sqlstr);
+    while(queryObj.next()) {
+        qDebug() << queryObj.value(0).toString ();
+    }
 }
