@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
 //    testAdo ();
 //    testFunc ();
 //    outputDatabaseDrivers();
-    testODBC ();
+//    testODBC ();
+    testSqlQueryModel();
     return a.exec();
 }

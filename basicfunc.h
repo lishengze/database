@@ -12,4 +12,7 @@ void testGetConnectStr();
 void outputDatabaseDrivers();
 
 void testODBC();
+
+void testSqlQueryModel();
+
 #endif

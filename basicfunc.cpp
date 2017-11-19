@@ -3,16 +3,20 @@
 #include <QSqlDatabase>
 #include <QStringList>
 #include <QSqlQuery>
+#include <QSqlError>
+#include <QSqlDriver>
 #include "windows.h"
 #include <qDebug>
 using namespace std;
 
 #include "basicfunc.h"
 
-#import "C:\Program Files\Common Files\System\ado\msado15.dll" no_namespace rename("EOF","EndOfFile")
+#import "C:\Program Files\Common Files\System\ado\msado15.dll" \
+        no_namespace rename("EOF","EndOfFile")
 
 string getConnectStr(string userid, string pwd, string databaseName){
-	string str = "Provider=SQLOLEDB.1;User ID=" + userid +";Password=" + pwd +";Persist Security Info=True;Initial Catalog="+ databaseName;
+    string str = "Provider=SQLOLEDB.1;User ID=" + userid +";Password="
+               + pwd +";Persist Security Info=True;Initial Catalog="+ databaseName;
 	return str;
 }
 
@@ -117,9 +121,34 @@ void testODBC() {
     QSqlDatabase db = createODBCConn();
 
     QSqlQuery queryObj(db);
-    QString sqlstr = "select top 10[stockcode] from [WeightData].[dbo].[SH000300]";
+    QString sqlstr = "select top 10[TIME] from [MarketData].[dbo].[SH600000]";
     queryObj.exec(sqlstr);
     while(queryObj.next()) {
-        qDebug() << queryObj.value(0).toString ();
+        qDebug() << queryObj.value(0).toInt ();
+    }
+
+    sqlstr = "select top 10[TOPEN] from [MarketData].[dbo].[SH600000]";
+    queryObj.exec(sqlstr);
+    while(queryObj.next()) {
+        qDebug() << queryObj.value(0).toFloat ();
     }
 }
+
+void testSqlQueryModel () {
+    QSqlDatabase db = createODBCConn();
+    QSqlQuery queryObj(db);
+    QString sqlstr = "select * from [MarketData].[dbo].[SH600000]";
+    queryObj.exec(sqlstr);
+
+    int numRows;
+    if (db.driver()->hasFeature(QSqlDriver::QuerySize)) {
+        qDebug() << "has feature: query Size";
+        numRows = queryObj.size();
+    } else {
+        qDebug() << "no feature: query Size";
+        queryObj.last();
+        numRows = queryObj.at() + 1;
+    }
+    qDebug() << "numRows: " << numRows;
+}
+
